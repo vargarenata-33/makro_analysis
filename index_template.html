@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Román Makrogazdasági Ledger &middot; Hitelkockázati stressztest</title>
+<link rel="stylesheet" href="style.css">
+<script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js"></script>
+</head>
+<body class="makro-report">
+<div class="report-shell">
+
+  <header class="report-header">
+    <p class="report-eyebrow">Makrogazdasági jegyzék &middot; Románia</p>
+    <h1 class="report-title">Kamatok, infláció és növekedés<br>egy főkönyvben</h1>
+    <p class="report-subtitle">
+      Negyedévesített idősorok az NBR alapkamatból, az Eurostat HICP-inflációjából,
+      a lakásárindexből és a GDP növekedési üteméből, 2010 Q1 és 2026 Q1 között,
+      kiegészítve egy interaktív lakossági hitelkockázati stresszteszt-eszközzel.
+    </p>
+    <div class="ticker">
+      <div class="ticker-item"><p class="ticker-label">Alapkamat</p><p class="ticker-value">__TICK_POLICY__<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">HICP infláció (h/h)</p><p class="ticker-value">__TICK_HICP__<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">Lakásárindex (n/n)</p><p class="ticker-value">__TICK_HPI__<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">GDP növekedés (év/év)</p><p class="ticker-value">__TICK_GDP__<small>%</small></p></div>
+    </div>
+  </header>
+
+  <section class="report-section">
+    <p class="section-index">01</p>
+    <h2 class="section-title">Kamatlábak és infláció</h2>
+    <p class="section-desc">
+      Az NBR alapkamata, a HICP havi inflációja és a lakásárindex negyedéves
+      változása, egy tengelyen. (A hitel- és betéti facilitási ráták a
+      korábbi verzióhoz képest ki lettek véve -- a stressztesztben az
+      alapkamat a releváns viszonyítási pont.)
+    </p>
+    <div class="chart-card">
+      <div id="chart-rates" style="height:440px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">02</p>
+    <h2 class="section-title">GDP növekedési üteme</h2>
+    <p class="section-desc">
+      Éves összevetésű (év/év) GDP-növekedés folyó áron, negyedévente -- a
+      korábbi nominális szint (millió RON) helyett, mert az ütem közvetlenül
+      összevethető a kamat- és inflációs pályával.
+    </p>
+    <div class="chart-card">
+      <div id="chart-gdp" style="height:380px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">03</p>
+    <h2 class="section-title">Korrelációs hőtérkép</h2>
+    <p class="section-desc">
+      A négy megmaradó mutató (alapkamat, HICP-infláció, lakásárindex, GDP-növekedés)
+      páronkénti korrelációja, 2010 Q1 -- 2026 Q1 negyedéves adatokon.
+    </p>
+    <div class="chart-card">
+      <div id="chart-corr" style="height:440px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">04</p>
+    <h2 class="section-title">Hitelkockázati stressztest</h2>
+    <p class="section-desc">
+      Hogyan hat az alapkamat elmozdulása a lakossági hitelportfólió
+      törlesztőképességére? Állítsd a csúszkákat -- az eredmény azonnal
+      újraszámolódik, szerver nélkül, a böngészőben.
+    </p>
+
+    <div class="sim-shell">
+      <div class="sim-controls no-print">
+        <h3>Forgatókönyv</h3>
+
+        <div class="control-item">
+          <label>Alapkamat-változás <span class="ctrl-value" id="val-deltaR">+0.00 pp</span></label>
+          <input type="range" id="ctrl-deltaR" min="-3" max="6" step="0.25" value="0">
+          <p class="ctrl-hint">Viszonyítva a jelenlegi __TICK_POLICY__%-hoz. Negatív = kamatcsökkentés.</p>
+        </div>
+
+        <div class="control-item">
+          <label>Változó kamatozású állomány <span class="ctrl-value" id="val-variableShare">60%</span></label>
+          <input type="range" id="ctrl-variableShare" min="30" max="90" step="5" value="60">
+          <p class="ctrl-hint">A portfólió hányada mozog együtt az alapkamattal (ROBOR/IRCC-hez kötött).</p>
+        </div>
+
+        <div class="control-item">
+          <label>Kamatérzékenység <span class="ctrl-value" id="val-sensitivity">7.0%/pp</span></label>
+          <input type="range" id="ctrl-sensitivity" min="2" max="15" step="0.5" value="7">
+          <p class="ctrl-hint">Törlesztőrészlet-emelkedés minden +1 pp kamatlépésre.</p>
+        </div>
+
+        <div class="control-item">
+          <label>Stressz-küszöb (DSTI) <span class="ctrl-value" id="val-threshold">40%</span></label>
+          <input type="range" id="ctrl-threshold" min="30" max="60" step="1" value="40">
+          <p class="ctrl-hint">Törlesztés/jövedelem arány, amely felett nő a nemteljesítési kockázat.</p>
+        </div>
+
+        <button class="sim-reset" id="sim-reset">Alaphelyzet visszaállítása</button>
+      </div>
+
+      <div class="sim-main">
+        <div class="sim-results">
+          <div class="sim-result-item">
+            <p class="sim-result-label">Effektív alapkamat</p>
+            <p class="sim-result-value" id="res-effRate">6.50%</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Stresszben lévő ügyfelek</p>
+            <p class="sim-result-value" id="res-stressedPct">--</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Átlagos DSTI (új)</p>
+            <p class="sim-result-value" id="res-avgDSTI">--</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Eltérés az alaphelyzethez képest</p>
+            <p class="sim-result-value" id="res-deltaVsBase">--</p>
+          </div>
+        </div>
+
+        <div class="sim-charts">
+          <div class="sim-chart-card">
+            <p class="sim-chart-title">DSTI-eloszlás a forgatókönyv után</p>
+            <div id="sim-histogram" style="height:250px; width:100%;"></div>
+          </div>
+          <div class="sim-chart-card">
+            <p class="sim-chart-title">Stresszben lévő ügyfelek a kamatváltozás függvényében</p>
+            <div id="sim-curve" style="height:250px; width:100%;"></div>
+          </div>
+        </div>
+
+        <details class="methodology">
+          <summary>Módszertan és feltételezések</summary>
+          <div class="methodology-detail">
+            <p>
+              Ez egy <strong>illusztratív, egyszerűsített</strong> szimuláció --
+              nem valódi banki portfólión vagy felügyeleti mikroadaton alapul,
+              mert ilyen adat nem áll rendelkezésre. Célja a mechanizmus
+              megértése, nem pontos kockázati előrejelzés.
+            </p>
+            <ul>
+              <li>4000 szintetikus ügyfél, kezdeti DSTI (törlesztés/jövedelem
+                arány) lognormális eloszlásból, 32%-os medián körül.</li>
+              <li>Új DSTI = kezdeti DSTI &times; (1 + változó kamatozású arány
+                &times; kamatérzékenység &times; alapkamat-változás).</li>
+              <li>A kamatérzékenység és a változó kamatozású arány csúszkával
+                állítható feltételezés, nem mért adat.</li>
+              <li>„Stresszben” = az új DSTI meghaladja a beállított küszöböt --
+                ez megnövekedett nemteljesítési kockázatot jelez, nem tényleges
+                nemfizetést.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div class="report-actions no-print">
+          <button class="btn-ledger" onclick="window.print()">Riport exportálása (PDF)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">05</p>
+    <h2 class="section-title">Adattábla</h2>
+    <p class="section-desc">Az utolsó 12 negyedév, a megmaradó négy mutatóval.</p>
+    <div class="chart-card">
+      <table class="data-table">
+        <thead><tr><th>Dátum</th><th>Alapkamat</th><th>HICP m/m</th><th>HPI n/n</th><th>GDP év/év</th></tr></thead>
+        <tbody>
+__TABLE_ROWS__
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="report-footer">
+    <span>Adatforrások: BNR, Eurostat (HICP, HPI, GDP)</span>
+    <span>Generálva: build_report.py &middot; 2010 Q1 &ndash; 2026 Q1</span>
+  </footer>
+
+</div>
+
+<script>
+const DATES = __DATES__;
+const POLICY = __POLICY__;
+const HICP = __HICP__;
+const HPI = __HPI__;
+const GDP = __GDP__;
+const CORR_LABELS = __CORR_LABELS__;
+const CORR_MATRIX = __CORR_MATRIX__;
+
+const INK = "#0E1B2C", INK_SOFT = "#16273D", INK_LINE = "#2B3E56";
+const PAPER = "#F3EFE4", PAPER_DIM = "#B9BFC9", GOLD = "#C9A24B", TEAL = "#4E8B7C", RUST = "#B4552D";
+const FONT = { family: "IBM Plex Mono, monospace", color: PAPER_DIM, size: 12 };
+
+function styleLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: INK_SOFT,
+    plot_bgcolor: INK_SOFT,
+    font: FONT,
+    margin: { l: 50, r: 30, t: 30, b: 40 },
+    legend: { orientation: "h", yanchor: "bottom", y: 1.02, xanchor: "left", x: 0, font: { color: PAPER_DIM, size: 11 } },
+    hovermode: "x unified",
+    xaxis: { gridcolor: INK_LINE, zerolinecolor: INK_LINE, linecolor: INK_LINE },
+    yaxis: { gridcolor: INK_LINE, zerolinecolor: INK_LINE, linecolor: INK_LINE },
+  }, extra || {});
+}
+
+Plotly.newPlot("chart-rates", [
+  { x: DATES, y: POLICY, name: "Alapkamat (%)", mode: "lines", line: { color: GOLD, width: 2 } },
+  { x: DATES, y: HICP, name: "HICP infláció (havi %)", mode: "lines", line: { color: PAPER, width: 2 } },
+  { x: DATES, y: HPI, name: "Lakásárindex (n/n %)", mode: "lines", line: { color: "#8FB6AD", width: 2 } },
+], styleLayout({ height: 440 }), { displaylogo: false, responsive: true });
+
+Plotly.newPlot("chart-gdp", [
+  { x: DATES, y: GDP, type: "bar", marker: { color: GOLD }, name: "GDP növekedés (év/év %)" },
+], styleLayout({ height: 380, hovermode: "x" }), { displaylogo: false, responsive: true });
+
+Plotly.newPlot("chart-corr", [{
+  z: CORR_MATRIX, x: CORR_LABELS, y: CORR_LABELS,
+  type: "heatmap", zmin: -1, zmax: 1,
+  colorscale: [[0, RUST], [0.5, INK_SOFT], [1, TEAL]],
+  texttemplate: "%{z:.2f}",
+  textfont: { color: PAPER, family: FONT.family },
+  colorbar: { outlinewidth: 0, tickfont: { color: PAPER_DIM } },
+}], styleLayout({
+  height: 440, hovermode: "closest",
+  xaxis: { gridcolor: INK_LINE, side: "bottom" },
+  yaxis: { gridcolor: INK_LINE, autorange: "reversed" },
+}), { displaylogo: false, responsive: true });
+</script>
+<script src="sim.js"></script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Román Makrogazdasági Ledger &middot; Hitelkockázati stressztest</title>
+<link rel="stylesheet" href="style.css">
+<script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js"></script>
+</head>
+<body class="makro-report">
+<div class="report-shell">
+
+  <header class="report-header">
+    <p class="report-eyebrow">Makrogazdasági jegyzék &middot; Románia</p>
+    <h1 class="report-title">Kamatok, infláció és növekedés<br>egy főkönyvben</h1>
+    <p class="report-subtitle">
+      Negyedévesített idősorok az NBR alapkamatból, az Eurostat HICP-inflációjából,
+      a lakásárindexből és a GDP növekedési üteméből, 2010 Q1 és 2026 Q1 között,
+      kiegészítve egy interaktív lakossági hitelkockázati stresszteszt-eszközzel.
+    </p>
+    <div class="ticker">
+      <div class="ticker-item"><p class="ticker-label">Alapkamat</p><p class="ticker-value">6.50<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">HICP infláció (h/h)</p><p class="ticker-value">+0.40<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">Lakásárindex (n/n)</p><p class="ticker-value">+3.2<small>%</small></p></div>
+      <div class="ticker-item"><p class="ticker-label">GDP növekedés (év/év)</p><p class="ticker-value">+8.1<small>%</small></p></div>
+    </div>
+  </header>
+
+  <section class="report-section">
+    <p class="section-index">01</p>
+    <h2 class="section-title">Kamatlábak és infláció</h2>
+    <p class="section-desc">
+      Az NBR alapkamata, a HICP havi inflációja és a lakásárindex negyedéves
+      változása, egy tengelyen. (A hitel- és betéti facilitási ráták a
+      korábbi verzióhoz képest ki lettek véve -- a stressztesztben az
+      alapkamat a releváns viszonyítási pont.)
+    </p>
+    <div class="chart-card">
+      <div id="chart-rates" style="height:440px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">02</p>
+    <h2 class="section-title">GDP növekedési üteme</h2>
+    <p class="section-desc">
+      Éves összevetésű (év/év) GDP-növekedés folyó áron, negyedévente -- a
+      korábbi nominális szint (millió RON) helyett, mert az ütem közvetlenül
+      összevethető a kamat- és inflációs pályával.
+    </p>
+    <div class="chart-card">
+      <div id="chart-gdp" style="height:380px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">03</p>
+    <h2 class="section-title">Korrelációs hőtérkép</h2>
+    <p class="section-desc">
+      A négy megmaradó mutató (alapkamat, HICP-infláció, lakásárindex, GDP-növekedés)
+      páronkénti korrelációja, 2010 Q1 -- 2026 Q1 negyedéves adatokon.
+    </p>
+    <div class="chart-card">
+      <div id="chart-corr" style="height:440px; width:100%;"></div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">04</p>
+    <h2 class="section-title">Hitelkockázati stressztest</h2>
+    <p class="section-desc">
+      Hogyan hat az alapkamat elmozdulása a lakossági hitelportfólió
+      törlesztőképességére? Állítsd a csúszkákat -- az eredmény azonnal
+      újraszámolódik, szerver nélkül, a böngészőben.
+    </p>
+
+    <div class="sim-shell">
+      <div class="sim-controls no-print">
+        <h3>Forgatókönyv</h3>
+
+        <div class="control-item">
+          <label>Alapkamat-változás <span class="ctrl-value" id="val-deltaR">+0.00 pp</span></label>
+          <input type="range" id="ctrl-deltaR" min="-3" max="6" step="0.25" value="0">
+          <p class="ctrl-hint">Viszonyítva a jelenlegi 6.50%-hoz. Negatív = kamatcsökkentés.</p>
+        </div>
+
+        <div class="control-item">
+          <label>Változó kamatozású állomány <span class="ctrl-value" id="val-variableShare">60%</span></label>
+          <input type="range" id="ctrl-variableShare" min="30" max="90" step="5" value="60">
+          <p class="ctrl-hint">A portfólió hányada mozog együtt az alapkamattal (ROBOR/IRCC-hez kötött).</p>
+        </div>
+
+        <div class="control-item">
+          <label>Kamatérzékenység <span class="ctrl-value" id="val-sensitivity">7.0%/pp</span></label>
+          <input type="range" id="ctrl-sensitivity" min="2" max="15" step="0.5" value="7">
+          <p class="ctrl-hint">Törlesztőrészlet-emelkedés minden +1 pp kamatlépésre.</p>
+        </div>
+
+        <div class="control-item">
+          <label>Stressz-küszöb (DSTI) <span class="ctrl-value" id="val-threshold">40%</span></label>
+          <input type="range" id="ctrl-threshold" min="30" max="60" step="1" value="40">
+          <p class="ctrl-hint">Törlesztés/jövedelem arány, amely felett nő a nemteljesítési kockázat.</p>
+        </div>
+
+        <button class="sim-reset" id="sim-reset">Alaphelyzet visszaállítása</button>
+      </div>
+
+      <div class="sim-main">
+        <div class="sim-results">
+          <div class="sim-result-item">
+            <p class="sim-result-label">Effektív alapkamat</p>
+            <p class="sim-result-value" id="res-effRate">6.50%</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Stresszben lévő ügyfelek</p>
+            <p class="sim-result-value" id="res-stressedPct">--</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Átlagos DSTI (új)</p>
+            <p class="sim-result-value" id="res-avgDSTI">--</p>
+          </div>
+          <div class="sim-result-item">
+            <p class="sim-result-label">Eltérés az alaphelyzethez képest</p>
+            <p class="sim-result-value" id="res-deltaVsBase">--</p>
+          </div>
+        </div>
+
+        <div class="sim-charts">
+          <div class="sim-chart-card">
+            <p class="sim-chart-title">DSTI-eloszlás a forgatókönyv után</p>
+            <div id="sim-histogram" style="height:250px; width:100%;"></div>
+          </div>
+          <div class="sim-chart-card">
+            <p class="sim-chart-title">Stresszben lévő ügyfelek a kamatváltozás függvényében</p>
+            <div id="sim-curve" style="height:250px; width:100%;"></div>
+          </div>
+        </div>
+
+        <details class="methodology">
+          <summary>Módszertan és feltételezések</summary>
+          <div class="methodology-detail">
+            <p>
+              Ez egy <strong>illusztratív, egyszerűsített</strong> szimuláció --
+              nem valódi banki portfólión vagy felügyeleti mikroadaton alapul,
+              mert ilyen adat nem áll rendelkezésre. Célja a mechanizmus
+              megértése, nem pontos kockázati előrejelzés.
+            </p>
+            <ul>
+              <li>4000 szintetikus ügyfél, kezdeti DSTI (törlesztés/jövedelem
+                arány) lognormális eloszlásból, 32%-os medián körül.</li>
+              <li>Új DSTI = kezdeti DSTI &times; (1 + változó kamatozású arány
+                &times; kamatérzékenység &times; alapkamat-változás).</li>
+              <li>A kamatérzékenység és a változó kamatozású arány csúszkával
+                állítható feltételezés, nem mért adat.</li>
+              <li>„Stresszben” = az új DSTI meghaladja a beállított küszöböt --
+                ez megnövekedett nemteljesítési kockázatot jelez, nem tényleges
+                nemfizetést.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div class="report-actions no-print">
+          <button class="btn-ledger" onclick="window.print()">Riport exportálása (PDF)</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="report-section">
+    <p class="section-index">05</p>
+    <h2 class="section-title">Adattábla</h2>
+    <p class="section-desc">Az utolsó 12 negyedév, a megmaradó négy mutatóval.</p>
+    <div class="chart-card">
+      <table class="data-table">
+        <thead><tr><th>Dátum</th><th>Alapkamat</th><th>HICP m/m</th><th>HPI n/n</th><th>GDP év/év</th></tr></thead>
+        <tbody>
+<tr><td>2026-01</td><td>6.50</td><td>—</td><td>3.2</td><td>8.1</td></tr><tr><td>2025-10</td><td>6.50</td><td>0.40</td><td>1.7</td><td>9.9</td></tr><tr><td>2025-07</td><td>6.50</td><td>1.30</td><td>2.3</td><td>10.2</td></tr><tr><td>2025-04</td><td>6.50</td><td>0.37</td><td>0.4</td><td>7.2</td></tr><tr><td>2025-01</td><td>6.50</td><td>0.63</td><td>2.1</td><td>8.3</td></tr><tr><td>2024-10</td><td>6.50</td><td>0.43</td><td>1.6</td><td>8.3</td></tr><tr><td>2024-07</td><td>6.58</td><td>0.43</td><td>0.5</td><td>10.9</td></tr><tr><td>2024-04</td><td>7.00</td><td>0.17</td><td>0.5</td><td>12.9</td></tr><tr><td>2024-01</td><td>7.00</td><td>0.77</td><td>1.3</td><td>10.4</td></tr><tr><td>2023-10</td><td>7.00</td><td>0.23</td><td>1.5</td><td>16.3</td></tr><tr><td>2023-07</td><td>7.00</td><td>0.57</td><td>3.4</td><td>13.1</td></tr><tr><td>2023-04</td><td>7.00</td><td>0.60</td><td>-0.8</td><td>13.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="report-footer">
+    <span>Adatforrások: BNR, Eurostat (HICP, HPI, GDP)</span>
+    <span>Generálva: build_report.py &middot; 2010 Q1 &ndash; 2026 Q1</span>
+  </footer>
+
+</div>
+
+<script>
+const DATES = ["2010-01-01", "2010-04-01", "2010-07-01", "2010-10-01", "2011-01-01", "2011-04-01", "2011-07-01", "2011-10-01", "2012-01-01", "2012-04-01", "2012-07-01", "2012-10-01", "2013-01-01", "2013-04-01", "2013-07-01", "2013-10-01", "2014-01-01", "2014-04-01", "2014-07-01", "2014-10-01", "2015-01-01", "2015-04-01", "2015-07-01", "2015-10-01", "2016-01-01", "2016-04-01", "2016-07-01", "2016-10-01", "2017-01-01", "2017-04-01", "2017-07-01", "2017-10-01", "2018-01-01", "2018-04-01", "2018-07-01", "2018-10-01", "2019-01-01", "2019-04-01", "2019-07-01", "2019-10-01", "2020-01-01", "2020-04-01", "2020-07-01", "2020-10-01", "2021-01-01", "2021-04-01", "2021-07-01", "2021-10-01", "2022-01-01", "2022-04-01", "2022-07-01", "2022-10-01", "2023-01-01", "2023-04-01", "2023-07-01", "2023-10-01", "2024-01-01", "2024-04-01", "2024-07-01", "2024-10-01", "2025-01-01", "2025-04-01", "2025-07-01", "2025-10-01", "2026-01-01"];
+const POLICY = [7.0, 6.3333, 6.25, 6.25, 6.25, 6.25, 6.25, 6.0833, 5.5, 5.25, 5.25, 5.25, 5.25, 5.25, 4.6667, 4.0833, 3.5833, 3.5, 3.3333, 2.8333, 2.3333, 1.8333, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 2.1667, 2.4167, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.3333, 1.9167, 1.5833, 1.5, 1.25, 1.25, 1.25, 1.6667, 2.3333, 3.5, 5.25, 6.5833, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 6.5833, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5];
+const HICP = [0.7, 0.2, 1.1333, 0.5, 0.7333, 0.2, -0.3, 0.4, 0.5333, 0.1, 0.7, 0.1333, 0.5, 0.1, -0.3667, 0.2333, 0.4667, 0.0, -0.1, -0.0333, 0.4, -0.5333, -0.2667, 0.2667, -0.2333, 0.0333, -0.1333, 0.2667, -0.0333, 0.1, 0.1, 0.6667, 0.4, 0.3333, 0.1, 0.1333, 0.8, 0.2667, -0.0333, 0.3333, 0.3667, 0.1, -0.0667, 0.2333, 0.5667, 0.4, 0.5, 0.7, 1.4333, 1.4667, 0.6, 0.8667, 0.9, 0.6, 0.5667, 0.2333, 0.7667, 0.1667, 0.4333, 0.4333, 0.6333, 0.3667, 1.3, 0.4, null];
+const HPI = [-5.3, -1.6, -3.7, -2.3, -4.0, -1.8, -5.4, -3.5, 3.0, -0.6, -3.7, 0.3, 3.4, -0.6, -2.4, -0.5, 0.8, -1.5, -0.9, 1.7, 3.5, -1.2, -0.9, 1.5, 3.3, 2.8, -0.7, 1.7, 1.2, 4.9, -1.6, 1.2, 2.1, 3.1, -0.6, 0.8, 0.1, 1.6, 1.5, 1.6, 3.3, 0.1, -2.6, 1.3, 2.7, 1.6, 0.1, 2.8, 1.7, 3.7, -1.2, 2.5, -0.4, -0.8, 3.4, 1.5, 1.3, 0.5, 0.5, 1.6, 2.1, 0.4, 2.3, 1.7, 3.2];
+const GDP = [2.3618, 2.244, 3.7853, -0.9961, 12.8444, 7.5443, 8.0264, 6.4944, 3.6401, 7.6393, 5.2119, 6.6506, 1.5418, 0.3497, 2.3046, 2.4916, 7.0468, 6.3397, 5.5275, 4.769, 7.4635, 4.2204, 6.9948, 7.4065, 3.4353, 8.3366, 4.5339, 5.9622, 12.5959, 10.8837, 15.6098, 13.7741, 10.9946, 13.2416, 11.2776, 12.1279, 11.1997, 11.5669, 10.8815, 11.1757, 7.2608, -8.6659, -0.0338, 3.0407, 4.6662, 20.3877, 12.5481, 9.5237, 16.4943, 18.825, 16.6337, 15.1402, 16.9443, 13.3255, 13.0764, 16.2811, 10.425, 12.8519, 10.9442, 8.2782, 8.3428, 7.2496, 10.2235, 9.8829, 8.0891];
+const CORR_LABELS = ["Alapkamat (%)", "HICP infláció (havi %)", "Lakásárindex (n/n %)", "GDP növekedés (év/év %)"];
+const CORR_MATRIX = [[1.0, 0.318, -0.292, 0.028], [0.318, 1.0, 0.17, 0.388], [-0.292, 0.17, 1.0, 0.269], [0.028, 0.388, 0.269, 1.0]];
+
+const INK = "#0E1B2C", INK_SOFT = "#16273D", INK_LINE = "#2B3E56";
+const PAPER = "#F3EFE4", PAPER_DIM = "#B9BFC9", GOLD = "#C9A24B", TEAL = "#4E8B7C", RUST = "#B4552D";
+const FONT = { family: "IBM Plex Mono, monospace", color: PAPER_DIM, size: 12 };
+
+function styleLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: INK_SOFT,
+    plot_bgcolor: INK_SOFT,
+    font: FONT,
+    margin: { l: 50, r: 30, t: 30, b: 40 },
+    legend: { orientation: "h", yanchor: "bottom", y: 1.02, xanchor: "left", x: 0, font: { color: PAPER_DIM, size: 11 } },
+    hovermode: "x unified",
+    xaxis: { gridcolor: INK_LINE, zerolinecolor: INK_LINE, linecolor: INK_LINE },
+    yaxis: { gridcolor: INK_LINE, zerolinecolor: INK_LINE, linecolor: INK_LINE },
+  }, extra || {});
+}
+
+Plotly.newPlot("chart-rates", [
+  { x: DATES, y: POLICY, name: "Alapkamat (%)", mode: "lines", line: { color: GOLD, width: 2 } },
+  { x: DATES, y: HICP, name: "HICP infláció (havi %)", mode: "lines", line: { color: PAPER, width: 2 } },
+  { x: DATES, y: HPI, name: "Lakásárindex (n/n %)", mode: "lines", line: { color: "#8FB6AD", width: 2 } },
+], styleLayout({ height: 440 }), { displaylogo: false, responsive: true });
+
+Plotly.newPlot("chart-gdp", [
+  { x: DATES, y: GDP, type: "bar", marker: { color: GOLD }, name: "GDP növekedés (év/év %)" },
+], styleLayout({ height: 380, hovermode: "x" }), { displaylogo: false, responsive: true });
+
+Plotly.newPlot("chart-corr", [{
+  z: CORR_MATRIX, x: CORR_LABELS, y: CORR_LABELS,
+  type: "heatmap", zmin: -1, zmax: 1,
+  colorscale: [[0, RUST], [0.5, INK_SOFT], [1, TEAL]],
+  texttemplate: "%{z:.2f}",
+  textfont: { color: PAPER, family: FONT.family },
+  colorbar: { outlinewidth: 0, tickfont: { color: PAPER_DIM } },
+}], styleLayout({
+  height: 440, hovermode: "closest",
+  xaxis: { gridcolor: INK_LINE, side: "bottom" },
+  yaxis: { gridcolor: INK_LINE, autorange: "reversed" },
+}), { displaylogo: false, responsive: true });
+</script>
+<script src="sim.js"></script>
+</body>
+</html>

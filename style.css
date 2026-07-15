@@ -1,0 +1,525 @@
+/* =============================================================================
+   style.css
+   -----------------------------------------------------------------------------
+   Közös design rendszer a "Román Makrogazdasági Ledger" projekthez.
+   Használja: index.html (közvetlen <link>) és main.py (Streamlit, a CSS
+   tartalma <style> tagbe injektálva).
+
+   Design koncepció: "Ledger" -- egy jegybanki könyvelési napló hangulata.
+   Sötét tintakék alap, arany/mustár ékezet (kamatláb-jegyzék), monospace
+   számok (mint egy fizikai főkönyvben), szerif címsorok (hivatalos jelentés
+   -jelleg).
+============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* --- Színpaletta ------------------------------------------------------ */
+  --ink:         #0E1B2C;   /* fő háttér, mély tintakék-fekete */
+  --ink-soft:    #16273D;   /* kártya/panel háttér */
+  --ink-line:    #2B3E56;   /* elválasztó vonalak, keretek */
+  --paper:       #F3EFE4;   /* fő szöveg / "papír" tónus */
+  --paper-dim:   #B9BFC9;   /* másodlagos szöveg */
+  --gold:        #C9A24B;   /* elsődleges ékezet -- kamatláb, kiemelés */
+  --gold-dim:    #8C7638;
+  --teal:        #4E8B7C;   /* másodlagos ékezet -- pozitív / stabil */
+  --rust:        #B4552D;   /* harmadlagos ékezet -- negatív / figyelmeztetés */
+
+  /* --- Tipográfia --------------------------------------------------------*/
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+
+  --radius: 3px;
+}
+
+/* =============================================================================
+   1) ÁLTALÁNOS ELEMEK -- index.html (statikus riport oldal)
+============================================================================= */
+
+* { box-sizing: border-box; }
+
+body.makro-report {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.makro-report a { color: var(--gold); }
+
+.report-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+}
+
+/* --- Fejléc / hero ---------------------------------------------------- */
+
+.report-header {
+  padding: 56px 0 28px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.report-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 14px;
+}
+
+.report-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 16px;
+  color: var(--paper);
+  letter-spacing: -0.01em;
+}
+
+.report-subtitle {
+  font-size: 16px;
+  color: var(--paper-dim);
+  max-width: 640px;
+  margin: 0;
+}
+
+/* --- Ticker / kamatláb-jegyzék sáv (signature elem) -------------------- */
+
+.ticker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 32px;
+  border-top: 1px solid var(--ink-line);
+}
+
+.ticker-item {
+  flex: 1 1 160px;
+  padding: 18px 24px 18px 0;
+  border-right: 1px solid var(--ink-line);
+  margin-right: 24px;
+}
+
+.ticker-item:last-child { border-right: none; }
+
+.ticker-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  margin: 0 0 8px;
+}
+
+.ticker-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--gold);
+  margin: 0;
+}
+
+.ticker-value small {
+  font-size: 13px;
+  color: var(--paper-dim);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* --- Szekciók ----------------------------------------------------------*/
+
+.report-section {
+  padding: 56px 0 8px;
+}
+
+.section-index {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold-dim);
+  letter-spacing: 0.1em;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  margin: 6px 0 8px;
+  color: var(--paper);
+}
+
+.section-desc {
+  color: var(--paper-dim);
+  font-size: 14.5px;
+  max-width: 680px;
+  margin: 0 0 28px;
+}
+
+.chart-card {
+  background: var(--ink-soft);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+/* --- Adattábla ---------------------------------------------------------*/
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+table.data-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--gold);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ink-line);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+table.data-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--ink-line);
+  color: var(--paper-dim);
+}
+
+table.data-table tr:hover td { color: var(--paper); }
+
+/* --- Stressztest szimulátor --------------------------------------------*/
+
+.sim-shell {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .sim-shell { grid-template-columns: 1fr; }
+}
+
+.sim-controls {
+  background: var(--ink-soft);
+  border-right: 1px solid var(--ink-line);
+  padding: 26px 24px;
+}
+
+@media (max-width: 860px) {
+  .sim-controls { border-right: none; border-bottom: 1px solid var(--ink-line); }
+}
+
+.sim-controls h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 20px;
+}
+
+.control-item { margin-bottom: 22px; }
+.control-item:last-child { margin-bottom: 0; }
+
+.control-item label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--paper);
+  margin-bottom: 8px;
+}
+
+.control-item label span.ctrl-value {
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.control-item p.ctrl-hint {
+  font-size: 11.5px;
+  color: var(--paper-dim);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--ink-line);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 2px solid var(--ink-soft);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 2px solid var(--ink-soft);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.sim-reset {
+  margin-top: 24px;
+  width: 100%;
+  background: transparent;
+  color: var(--paper-dim);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.sim-reset:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+.sim-main { padding: 24px; background: var(--ink-soft); }
+
+.sim-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+}
+
+.sim-result-item {
+  flex: 1 1 150px;
+  padding: 16px 18px;
+  border-right: 1px solid var(--ink-line);
+}
+.sim-result-item:last-child { border-right: none; }
+
+.sim-result-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  margin: 0 0 8px;
+}
+
+.sim-result-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--paper);
+  margin: 0;
+}
+
+.sim-result-value.flag-high { color: var(--rust); }
+.sim-result-value.flag-ok { color: var(--teal); }
+
+.sim-charts {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .sim-charts { grid-template-columns: 1fr; }
+}
+
+.sim-chart-card {
+  background: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.sim-chart-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+
+.methodology {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border-left: 2px solid var(--gold-dim);
+  background: rgba(201, 162, 75, 0.05);
+  font-size: 12.5px;
+  color: var(--paper-dim);
+  line-height: 1.6;
+}
+
+.methodology strong { color: var(--paper); font-weight: 500; }
+
+.methodology summary {
+  cursor: pointer;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.methodology-detail { margin-top: 12px; }
+.methodology-detail ul { margin: 8px 0; padding-left: 18px; }
+.methodology-detail li { margin-bottom: 6px; }
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-ledger {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-ledger:hover { background: var(--gold-dim); }
+
+.btn-ledger.secondary {
+  background: transparent;
+  color: var(--paper-dim);
+  border: 1px solid var(--ink-line);
+}
+.btn-ledger.secondary:hover { color: var(--paper); border-color: var(--gold-dim); }
+
+@media print {
+  .sim-controls, .report-actions, .no-print { display: none !important; }
+  .sim-shell { grid-template-columns: 1fr; border: none; }
+  .sim-main { padding: 0; background: transparent; }
+  body.makro-report { background: white; color: black; }
+  .chart-card, .sim-chart-card { border: 1px solid #ccc; }
+}
+
+/* --- Lábléc --------------------------------------------------------------*/
+
+.report-footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink-line);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--paper-dim);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* =============================================================================
+   2) STREAMLIT ALKALMAZÁS (main.py) FELÜLDEFINIÁLÁSOK
+   Ezt a blokkot a main.py <style> tagbe injektálja a Streamlit oldalra.
+============================================================================= */
+
+[data-testid="stAppViewContainer"] {
+  background: var(--ink);
+  font-family: var(--font-body);
+}
+
+[data-testid="stHeader"] { background: transparent; }
+
+.block-container {
+  padding-top: 2.5rem;
+  max-width: 1180px;
+}
+
+/* Cím / caption */
+h1, h2, h3 {
+  font-family: var(--font-display) !important;
+  color: var(--paper) !important;
+  font-weight: 500 !important;
+}
+
+p, span, label, .stMarkdown, [data-testid="stCaptionContainer"] {
+  color: var(--paper-dim) !important;
+}
+
+/* Fülek (tabs) */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 4px;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.stTabs [data-baseweb="tab"] {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  background: transparent;
+}
+
+.stTabs [aria-selected="true"] {
+  color: var(--gold) !important;
+  border-bottom: 2px solid var(--gold) !important;
+}
+
+/* Kártya-szerű panelek (expander, dataframe, multiselect) */
+[data-testid="stExpander"], [data-testid="stDataFrame"] {
+  background: var(--ink-soft);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius);
+}
+
+.stMultiSelect [data-baseweb="tag"] {
+  background: var(--gold-dim) !important;
+  color: var(--paper) !important;
+}
+
+/* Gombok */
+.stDownloadButton button, .stButton button {
+  background: var(--gold) !important;
+  color: var(--ink) !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 500 !important;
+}
+
+.stDownloadButton button:hover, .stButton button:hover {
+  background: var(--gold-dim) !important;
+}
+
+/* Sidebar (ha használva lenne) */
+[data-testid="stSidebar"] {
+  background: var(--ink-soft);
+  border-right: 1px solid var(--ink-line);
+}
